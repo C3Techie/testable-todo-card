@@ -28,3 +28,4 @@ To view it locally:
 2. Open the `index.html` file directly in any modern web browser.
 
 ## 🔗 Live Demo
+[https://c3techie.github.io/testable-todo-card/](https://c3techie.github.io/testable-todo-card/)
