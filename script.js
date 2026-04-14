@@ -116,12 +116,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Expand/Collapse Logic
         // We measure if the content is truncated when collapsed
         const isExpanded = state.isExpanded;
-        
-        // Temporarily remove expanded class to measure real overflow
+
+        // Temporarily disable transition and remove expanded class to measure real overflow
+        const originalTransition = collapsibleSection.style.transition;
+        collapsibleSection.style.transition = 'none';
         collapsibleSection.classList.remove('expanded');
-        const isOverflowing = collapsibleSection.scrollHeight > collapsibleSection.clientHeight;
         
-        // Re-apply if it was actually expanded
+        // Force a layout reflow to get accurate measurements
+        void collapsibleSection.offsetHeight;
+
+        const isOverflowing = collapsibleSection.scrollHeight > collapsibleSection.clientHeight;
+
+        // Re-apply states
         if (isExpanded) {
             collapsibleSection.classList.add('expanded');
             expandToggle.textContent = 'Show less';
@@ -130,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
             expandToggle.textContent = 'Show more';
             expandToggle.setAttribute('aria-expanded', 'false');
         }
+
+        // Restore transition
+        void collapsibleSection.offsetHeight; // Force reflow before restoring transition
+        collapsibleSection.style.transition = originalTransition;
 
         // Only show the toggle button if the text is actually long enough to be truncated
         expandToggle.style.display = (isOverflowing || isExpanded) ? 'inline-flex' : 'none';
