@@ -1,31 +1,37 @@
-# Testable Todo Item Card | HNG Internship Stage 0
+# Advanced Todo Item Card | HNG Internship Stage 1
 
-A clean, modern, highly accessible, and fully testable Todo/Task Card component built for the **HNG Internship Stage 0** Frontend task.
+An interactive, stateful, and highly accessible Todo Card component built for **HNG Internship Stage 1**. This version extends the Stage 0 foundation into a more functional "app-like" experience with real-time state synchronization.
 
-## 🎯 Task Focus
-The primary focus of this project is on three key areas:
-1. **Testability**: Strict adherence to exact `data-testid` attributes for automated grading.
-2. **Accessibility (a11y)**: Implementation of proper semantic HTML, screen-reader compatibility (ARIA labels, polite live regions), keyboard navigability, and WCAG AA contrast compliance.
-3. **Responsiveness**: A fluid layout using Flexbox that breaks down gracefully from desktop screens (≤1200px) down to narrow mobile screens (320px).
+## 🚀 Stage 1 Enhancements (What Changed)
+*   **Editing Mode**: A fully functional edit form that allows users to modify the task title, description, priority, and due date.
+*   **Status Transitions**: Added a status dropdown ("Pending", "In Progress", "Done") that synchronizes perfectly with the completion checkbox.
+*   **Expand/Collapse**: Long descriptions are now truncated by default to maintain page cleanlines, with an accessible toggle to reveal full content.
+*   **Granular Time Handling**: Improved time logic now shows minute-by-minute updates (e.g., "Due in 3 hours", "Overdue by 15 minutes") and stops when the task is marked "Completed".
+*   **Visual State Feedback**: Added dynamic background tints based on priority and specialized styles for "In Progress" and "Overdue" states.
 
-## ✨ Features
-* **Semantic Structure**: Uses appropriate landmarks and tags like `<article>`, `<time>`, `<input type="checkbox">`, and `<ul>`.
-* **Dynamic Time Remaining**: Calculates the remaining time based on a hardcoded due date and updates the view (e.g., "Due in 3 days", "Overdue by 2 hours").
-* **Live Refresh**: Automatically recalculates the time remaining every 60 seconds.
-* **Interactive States**: Toggling the checkbox properly reflects a "Done" state, dynamically adding strike-through styling, lowering opacity, and updating the visual status badge.
-* **Mock Actions**: Accessible buttons for "Edit" (`console.log`) and "Delete" (`alert`) to demonstrate interactive element handling without full CRUD logic required for Stage 0.
+## 🎨 Design Decisions
+*   **State-Driven UI**: Moved from static hardcoded values to a centralized `state` object. The UI now re-renders dynamically whenever the state changes, ensuring consistency across multiple controls (e.g., checkbox vs. dropdown).
+*   **Priority Indicators**: Implemented subtle background tints for each priority level (Low/Medium/High) to provide immediate visual context without overwhelming the user.
+*   **Focus Management**: Implemented accessibility-first focus handling. Opening the edit form automatically focuses the first input, and closing it returns focus to the Edit button.
+*   **Glassmorphism Accents**: Used modern CSS variables and transitions to create a premium, fluid feel that reacts to user interaction.
+
+## ♿ Accessibility Notes
+*   **Aria-Live**: The time remaining element uses `aria-live="polite"` to notify screen readers of updates without interrupting the user.
+*   **Aria-Expanded**: The expand/collapse toggle correctly updates `aria-expanded` and `aria-controls` for assistive technology.
+*   **Keyboard Flow**: Maintained a logical tab order: Checkbox -> Status Control -> Expand Toggle -> Edit Button -> Delete Button.
+*   **Semantic Forms**: Use proper `<label for="...">` associations for all form fields in Edit Mode.
 
 ## 🛠️ Technologies Used
-* **HTML5**: For semantic and structural page layout.
-* **CSS3**: For responsive design, custom checkbox styling, and modern UI aesthetics (blur backgrounds, hover effects).
-* **Vanilla JavaScript**: For DOM manipulation, time calculations, and event handling. No external libraries or frameworks.
+*   **HTML5 & CSS3**: Custom properties (Variables), Flexbox, Grid, and CSS transitions.
+*   **Vanilla JavaScript**: State management, DOM manipulation, and interval-based time logic.
+
+## ⚠️ Known Limitations
+*   **No Persistence**: This version does not use `localStorage`. Refreshing the page will reset all changes to the initial state.
+*   **Single Card**: This is a standalone component demonstration, not a full list management system.
 
 ## 🚀 Quick Start
-This project requires no build tools or package managers. 
-
-To view it locally:
-1. Clone or download the repository.
-2. Open the `index.html` file directly in any modern web browser.
+1. Clone the repository.
+2. Open `index.html` in any browser.
 
 ## 🔗 Live Demo
 [https://c3techie.github.io/testable-todo-card/](https://c3techie.github.io/testable-todo-card/)

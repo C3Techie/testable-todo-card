@@ -1,20 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // State Object
+    const state = {
+        title: "Squash the Memory Leak in Prod 🐛",
+        description: "A rogue memory leak has been silently crashing the auth service every 6 hours. Reproduce, profile, patch, and ship a hotfix before the next incident window.",
+        priority: "High",
+        status: "Pending",
+        dueDate: "2026-04-15T18:00",
+        isExpanded: false,
+        isEditing: false
+    };
+
+    // DOM Elements - Containers
     const todoCard = document.querySelector('[data-testid="test-todo-card"]');
-    const toggle = document.querySelector('[data-testid="test-todo-complete-toggle"]');
+    const viewMode = document.getElementById('view-mode');
+    const editMode = document.getElementById('edit-mode');
+    const collapsibleSection = document.querySelector('[data-testid="test-todo-collapsible-section"]');
+
+    // DOM Elements - Display
+    const titleDisplay = document.querySelector('[data-testid="test-todo-title"]');
+    const descDisplay = document.querySelector('[data-testid="test-todo-description"]');
+    const priorityBadge = document.querySelector('[data-testid="test-todo-priority"]');
     const statusBadge = document.querySelector('[data-testid="test-todo-status"]');
-    const timeRemainingElement = document.querySelector('[data-testid="test-todo-time-remaining"]');
+    const dueDateDisplay = document.querySelector('[data-testid="test-todo-due-date"]');
+    const timeRemainingDisplay = document.querySelector('[data-testid="test-todo-time-remaining"]');
+    const overdueIndicator = document.querySelector('[data-testid="test-todo-overdue-indicator"]');
+    
+    // DOM Elements - Controls
+    const checkbox = document.querySelector('[data-testid="test-todo-complete-toggle"]');
+    const statusControl = document.querySelector('[data-testid="test-todo-status-control"]');
+    const expandToggle = document.querySelector('[data-testid="test-todo-expand-toggle"]');
     const editBtn = document.querySelector('[data-testid="test-todo-edit-button"]');
     const deleteBtn = document.querySelector('[data-testid="test-todo-delete-button"]');
 
-    // Hardcoded Due Date: April 15, 2026, 6:00 PM
-    const targetDate = new Date('2026-04-15T18:00:00');
+    // DOM Elements - Form
+    const editTitleInput = document.getElementById('edit-title');
+    const editDescInput = document.getElementById('edit-description');
+    const editPrioritySelect = document.getElementById('edit-priority');
+    const editDueDateInput = document.getElementById('edit-due-date');
+    const cancelBtn = document.querySelector('[data-testid="test-todo-cancel-button"]');
 
     /**
-     * Calculates and formats the time remaining until the target date.
+     * Formats the date for display (e.g., "Due April 15, 2026")
      */
-    function updateTimeRemaining() {
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    /**
+     * Calculates granular time remaining
+     */
+    function getGranularTime() {
+        if (state.status === 'Done') return "Completed";
+
         const now = new Date();
-        const diff = targetDate - now;
+        const target = new Date(state.dueDate);
+        const diff = target - now;
         const isOverdue = diff < 0;
         const absDiff = Math.abs(diff);
 
@@ -22,59 +63,152 @@ document.addEventListener('DOMContentLoaded', () => {
         const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
 
-        let timeStr = "";
-        
         if (isOverdue) {
-            if (days > 0) timeStr = `Overdue by ${days} day${days > 1 ? 's' : ''} ⚠️`;
-            else if (hours > 0) timeStr = `Overdue by ${hours} hour${hours > 1 ? 's' : ''} ⚠️`;
-            else if (minutes > 0) timeStr = `Overdue by ${minutes} minute${minutes > 1 ? 's' : ''} ⚠️`;
-            else timeStr = "Overdue! ⚠️";
-            
-            timeRemainingElement.style.color = "var(--danger)";
+            state.isOverdue = true;
+            if (days > 0) return `Overdue by ${days} day${days > 1 ? 's' : ''}`;
+            if (hours > 0) return `Overdue by ${hours} hour${hours > 1 ? 's' : ''}`;
+            return `Overdue by ${minutes} minute${minutes > 1 ? 's' : ''}`;
         } else {
-            if (days > 0) timeStr = `Due in ${days} day${days > 1 ? 's' : ''}`;
-            else if (hours > 0) timeStr = `Due in ${hours} hour${hours > 1 ? 's' : ''}`;
-            else if (minutes > 0) timeStr = `Due in ${minutes} minute${minutes > 1 ? 's' : ''}`;
-            else timeStr = "Due now! 🕒";
-            
-            timeRemainingElement.style.color = "var(--text-muted)";
+            state.isOverdue = false;
+            if (days > 0) return `Due in ${days} day${days > 1 ? 's' : ''}`;
+            if (hours > 0) return `Due in ${hours} hour${hours > 1 ? 's' : ''}`;
+            if (minutes > 0) return `Due in ${minutes} minute${minutes > 1 ? 's' : ''}`;
+            return "Due now!";
         }
-
-        timeRemainingElement.textContent = timeStr;
     }
 
     /**
-     * Toggles the completion state of the todo card.
+     * Main Render Function
      */
-    function toggleCompletion() {
-        if (toggle.checked) {
+    function render() {
+        // Toggle Modes
+        viewMode.hidden = state.isEditing;
+        editMode.hidden = !state.isEditing;
+
+        // Update Attributes for CSS selectors
+        todoCard.setAttribute('data-priority', state.priority);
+        todoCard.setAttribute('data-status', state.status);
+        todoCard.setAttribute('data-overdue', state.isOverdue && state.status !== 'Done');
+
+        if (state.status === 'Done') {
             todoCard.classList.add('completed');
-            statusBadge.textContent = 'Done ✅';
-            statusBadge.setAttribute('aria-label', 'Current Status: Done');
         } else {
             todoCard.classList.remove('completed');
-            statusBadge.textContent = 'Pending ⏳';
-            statusBadge.setAttribute('aria-label', 'Current Status: Pending');
         }
+
+        // Update Display Text
+        titleDisplay.textContent = state.title;
+        descDisplay.textContent = state.description;
+        priorityBadge.textContent = `${state.priority} ${state.priority === 'High' ? '🔥' : state.priority === 'Medium' ? '⚡' : '🌱'}`;
+        statusBadge.textContent = `${state.status} ${state.status === 'Done' ? '✅' : state.status === 'In Progress' ? '🚀' : '⏳'}`;
+        dueDateDisplay.textContent = `Due ${formatDate(state.dueDate)}`;
+        dueDateDisplay.setAttribute('datetime', state.dueDate);
+        
+        // Time Remaining Logic
+        const timeStr = getGranularTime();
+        timeRemainingDisplay.textContent = timeStr;
+        overdueIndicator.hidden = !(state.isOverdue && state.status !== 'Done');
+
+        // Sync Controls
+        checkbox.checked = state.status === 'Done';
+        statusControl.value = state.status;
+
+        // Expand/Collapse Logic
+        // We measure if the content is truncated when collapsed
+        const isExpanded = state.isExpanded;
+        
+        // Temporarily remove expanded class to measure real overflow
+        collapsibleSection.classList.remove('expanded');
+        const isOverflowing = collapsibleSection.scrollHeight > collapsibleSection.clientHeight;
+        
+        // Re-apply if it was actually expanded
+        if (isExpanded) {
+            collapsibleSection.classList.add('expanded');
+            expandToggle.textContent = 'Show less';
+            expandToggle.setAttribute('aria-expanded', 'true');
+        } else {
+            expandToggle.textContent = 'Show more';
+            expandToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        // Only show the toggle button if the text is actually long enough to be truncated
+        expandToggle.style.display = (isOverflowing || isExpanded) ? 'inline-flex' : 'none';
+
+        // Accessibility Labels
+        priorityBadge.setAttribute('aria-label', `Priority: ${state.priority}`);
+        statusBadge.setAttribute('aria-label', `Status: ${state.status}`);
     }
 
-    // Event Listeners
-    toggle.addEventListener('change', toggleCompletion);
+    // --- Event Listeners ---
 
+    // Status / Checkbox Synchronization
+    checkbox.addEventListener('change', () => {
+        state.status = checkbox.checked ? 'Done' : 'Pending';
+        render();
+    });
+
+    statusControl.addEventListener('change', () => {
+        state.status = statusControl.value;
+        render();
+    });
+
+    // Expand / Collapse
+    expandToggle.addEventListener('click', () => {
+        state.isExpanded = !state.isExpanded;
+        render();
+    });
+
+    // Edit Mode Transitions
     editBtn.addEventListener('click', () => {
-        console.log("Edit clicked");
-        // Visual feedback for dummy action
-        editBtn.style.transform = "scale(0.9)";
-        setTimeout(() => editBtn.style.transform = "scale(1)", 100);
+        state.isEditing = true;
+        
+        // Populate Form
+        editTitleInput.value = state.title;
+        editDescInput.value = state.description;
+        editPrioritySelect.value = state.priority;
+        editDueDateInput.value = state.dueDate;
+        
+        render();
+        editTitleInput.focus(); // Focus management
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        state.isEditing = false;
+        render();
+        editBtn.focus(); // Return focus
+    });
+
+    editMode.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        state.title = editTitleInput.value;
+        state.description = editDescInput.value;
+        state.priority = editPrioritySelect.value;
+        state.dueDate = editDueDateInput.value;
+        state.isEditing = false;
+        
+        render();
+        editBtn.focus(); // Return focus
     });
 
     deleteBtn.addEventListener('click', () => {
-        alert("Delete clicked - This would remove the task.");
+        if (confirm("Are you sure you want to delete this task?")) {
+            todoCard.style.opacity = '0';
+            todoCard.style.transform = 'scale(0.9)';
+            setTimeout(() => todoCard.remove(), 300);
+        }
     });
 
-    // Initial runs
-    updateTimeRemaining();
-    
-    // Optional: Update every minute
-    setInterval(updateTimeRemaining, 60000);
+    // Initial Render
+    render();
+
+    // Live Time Updates (every 30 seconds)
+    setInterval(() => {
+        if (state.status !== 'Done') {
+            const timeStr = getGranularTime();
+            timeRemainingDisplay.textContent = timeStr;
+            overdueIndicator.hidden = !state.isOverdue;
+            todoCard.setAttribute('data-overdue', state.isOverdue);
+        }
+    }, 30000);
 });
